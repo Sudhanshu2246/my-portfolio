@@ -3,23 +3,21 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { EXPERIENCE } from "@/lib/constants";
+import { usePanels } from "@/lib/panelContext";
 
-gsap.registerPlugin(ScrollTrigger);
+import { EXPERIENCE } from "@/lib/constants";
 
 export default function Experience() {
   const panelRef = useRef<HTMLDivElement>(null);
+  const { currentPanel } = usePanels();
+  const animated = useRef(false);
 
   useEffect(() => {
+    if (currentPanel !== 2 || animated.current) return;
+    animated.current = true;
+
     const ctx = gsap.context(() => {
       gsap.from(".exp-card", {
-        scrollTrigger: {
-          trigger: panelRef.current,
-          scroller: document.body,
-          horizontal: true,
-          start: "left 75%",
-        },
         y: 60,
         opacity: 0,
         duration: 1,
@@ -28,12 +26,6 @@ export default function Experience() {
       });
 
       gsap.from(".exp-line-h", {
-        scrollTrigger: {
-          trigger: panelRef.current,
-          scroller: document.body,
-          horizontal: true,
-          start: "left 75%",
-        },
         scaleX: 0,
         duration: 1.4,
         ease: "power3.out",
@@ -42,7 +34,7 @@ export default function Experience() {
     }, panelRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [currentPanel]);
 
   return (
     <div

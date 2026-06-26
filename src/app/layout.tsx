@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Space_Grotesk, Geist } from "next/font/google";
 import "./globals.css";
 import { getMetadata } from "@/lib/metadata";
+import CustomCursor from "@/components/ui/CustomCursor";
 
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-display",
@@ -65,6 +66,7 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-background text-primary antialiased" suppressHydrationWarning>
+        <CustomCursor />
         {children}
       </body>
     </html>

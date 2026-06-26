@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
-import { PROJECTS } from "@/lib/constants";
-import type { Project } from "@/lib/constants";
+import { PROJECTS, type Project } from "@/lib/constants";
+import { usePanels } from "@/lib/panelContext";
 
 // ── Detail Modal ─────────────────────────────────────────────────────────────
 function ProjectModal({
@@ -16,7 +16,7 @@ function ProjectModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
       onClick={onClose}
     >
       <div
@@ -24,11 +24,13 @@ function ProjectModal({
         style={{ background: "rgba(5,5,5,0.88)", backdropFilter: "blur(12px)" }}
       />
       <div
-        className="relative z-10 w-full max-w-3xl overflow-hidden rounded-t-3xl p-8 md:p-12"
+        data-inner-scroll
+        data-modal
+        className="relative z-10 w-full max-w-[90vw] md:max-w-4xl mt-12 md:mt-20 overflow-hidden rounded-3xl p-8 md:p-12 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
         style={{
           background: "#111111",
           border: "1px solid rgba(255,255,255,0.08)",
-          maxHeight: "85vh",
+          maxHeight: "70vh",
           overflowY: "auto",
         }}
         onClick={(e) => e.stopPropagation()}
@@ -36,7 +38,7 @@ function ProjectModal({
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition-colors hover:text-white"
+          className="absolute right-6 top-6 flex h-8 w-8 items-center justify-center rounded-full text-white/50 transition-colors hover:text-white z-50"
           style={{ background: "rgba(255,255,255,0.06)" }}
           aria-label="Close"
         >
@@ -238,17 +240,16 @@ export default function Projects() {
   const isDragging = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
+  const { currentPanel } = usePanels();
+  const animated = useRef(false);
 
   // Entrance animation
   useEffect(() => {
+    if (currentPanel !== 3 || animated.current) return;
+    animated.current = true;
+
     const ctx = gsap.context(() => {
       gsap.from(".project-card", {
-        scrollTrigger: {
-          trigger: panelRef.current,
-          scroller: document.body,
-          horizontal: true,
-          start: "left 80%",
-        },
         x: 60,
         opacity: 0,
         duration: 0.9,
@@ -257,7 +258,7 @@ export default function Projects() {
       });
     }, panelRef);
     return () => ctx.revert();
-  }, []);
+  }, [currentPanel]);
 
   // Drag-to-scroll on the cards track
   const onMouseDown = (e: React.MouseEvent) => {
@@ -328,6 +329,7 @@ export default function Projects() {
         {/* Scrollable card track */}
         <div
           ref={trackRef}
+          data-inner-scroll
           className="relative z-10 flex flex-1 items-center gap-5 overflow-x-auto px-12 pb-8 md:px-20 lg:px-32"
           style={{
             cursor: "grab",

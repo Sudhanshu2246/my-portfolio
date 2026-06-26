@@ -2,9 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-gsap.registerPlugin(ScrollTrigger);
+import { usePanels } from "@/lib/panelContext";
 
 const STATS = [
   { number: "3+",   label: "Full Stack Apps" },
@@ -15,16 +13,15 @@ const STATS = [
 
 export default function About() {
   const panelRef = useRef<HTMLDivElement>(null);
+  const { currentPanel } = usePanels();
+  const animated = useRef(false);
 
   useEffect(() => {
+    if (currentPanel !== 1 || animated.current) return;
+    animated.current = true;
+
     const ctx = gsap.context(() => {
       gsap.from(".about-stat-num", {
-        scrollTrigger: {
-          trigger: panelRef.current,
-          scroller: document.body,
-          horizontal: true,
-          start: "left 80%",
-        },
         y: 40,
         opacity: 0,
         duration: 0.9,
@@ -33,12 +30,6 @@ export default function About() {
       });
 
       gsap.from(".about-para", {
-        scrollTrigger: {
-          trigger: panelRef.current,
-          scroller: document.body,
-          horizontal: true,
-          start: "left 80%",
-        },
         y: 30,
         opacity: 0,
         duration: 0.8,
@@ -48,7 +39,7 @@ export default function About() {
     }, panelRef);
 
     return () => ctx.revert();
-  }, []);
+  }, [currentPanel]);
 
   return (
     <div

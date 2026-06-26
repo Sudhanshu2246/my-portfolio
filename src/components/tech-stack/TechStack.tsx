@@ -2,46 +2,53 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion } from "framer-motion";
 import { TECH_STACK } from "@/lib/constants";
-
-gsap.registerPlugin(ScrollTrigger);
+import { usePanels } from "@/lib/panelContext";
 
 // Devicon CDN base URL
 const DEVICON_BASE =
   "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons";
 
 // Map tech names → devicon slugs + variants
-const DEVICON_MAP: Record<string, { slug: string; variant: string } | null> = {
+type IconInfo = { slug: string; variant: string } | { url: string };
+const DEVICON_MAP: Record<string, IconInfo | null> = {
   // Frontend
   "React":          { slug: "react",               variant: "original" },
   "Next.js":        { slug: "nextjs",              variant: "original" },
-  "TypeScript":     { slug: "typescript",          variant: "original" },
+  "JavaScript":     { slug: "javascript",          variant: "original" },
   "Tailwind CSS":   { slug: "tailwindcss",         variant: "original" },
-  "GSAP":           null,
-  "Three.js":       { slug: "threejs",             variant: "original" },
-  "Framer Motion":  null,
-  "Redux":          { slug: "redux",               variant: "original" },
+  "React Query":    { url: "https://cdn.simpleicons.org/reactquery/white" },
+  "GSAP":           { url: "https://cdn.simpleicons.org/gsap/white" },
+  "Framer Motion":  { url: "https://cdn.simpleicons.org/framer/white" },
+  "Redux-Toolkit":  { slug: "redux",               variant: "original" }, // uses standard redux logo
+  "Context API":    { url: "https://api.iconify.design/logos/react.svg" }, // react logo for context API
+  "React Hook Form":{ url: "https://cdn.simpleicons.org/reacthookform/white" },
+  "Bootstrap":      { slug: "bootstrap",           variant: "original" },
+  "HTML5":          { slug: "html5",               variant: "original" },
+  "CSS3":           { slug: "css3",                variant: "original" },
   // Backend
   "Node.js":        { slug: "nodejs",              variant: "original" },
   "Express.js":     { slug: "express",             variant: "original" },
-  "NestJS":         { slug: "nestjs",              variant: "original" },
-  "GraphQL":        { slug: "graphql",             variant: "plain" },
-  "REST APIs":      null,
-  "WebSockets":     null,
+  "Socket.io":      { slug: "socketio",            variant: "original" },
+  "REST APIs":      { url: "https://api.iconify.design/material-symbols/api.svg" },
+  "WebSockets":     { url: "https://api.iconify.design/mdi/web.svg" },
   // Database
   "MongoDB":        { slug: "mongodb",             variant: "original" },
   "PostgreSQL":     { slug: "postgresql",          variant: "original" },
   "Redis":          { slug: "redis",               variant: "original" },
   "Elasticsearch":  { slug: "elasticsearch",       variant: "original" },
-  "Prisma":         null,
+  "Prisma":         { url: "https://cdn.simpleicons.org/prisma/white" },
   // DevOps
-  "AWS":            { slug: "amazonwebservices",   variant: "original" },
+  "AWS":            { url: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" },
   "Docker":         { slug: "docker",              variant: "original" },
-  "Kubernetes":     { slug: "kubernetes",          variant: "plain" },
-  "CI/CD":          null,
-  "Vercel":         null,
+  "CI/CD":          { url: "https://cdn.simpleicons.org/githubactions/white" },
   "Nginx":          { slug: "nginx",               variant: "original" },
+  // Tools
+  "Postman":        { url: "https://cdn.simpleicons.org/postman/white" },
+  "Mongo DB Compass": { url: "https://cdn.simpleicons.org/mongodb/white" },
+  "VS Code":        { slug: "vscode",              variant: "original" },
+  "GitHub":         { slug: "github",              variant: "original" },
 };
 
 // Accent colors per category
@@ -50,6 +57,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   Backend:  "#C86414",
   Database: "#7DF9FF",
   DevOps:   "#E8963C",
+  Tools:    "#B151FF",
 };
 
 const CATEGORIES = ["All", ...Object.keys(TECH_STACK)];
@@ -80,22 +88,35 @@ function TechCard({
   tech,
   category,
   index,
+  dragConstraints,
+  onDragEnd,
+  position,
+  setRef,
 }: {
   tech: string;
   category: string;
   index: number;
+  dragConstraints: React.RefObject<HTMLDivElement>;
+  onDragEnd: (tech: string, info: any) => void;
+  position: { x: number; y: number } | undefined;
+  setRef: (el: HTMLDivElement | null) => void;
 }) {
-  const cardRef = useRef<HTMLDivElement>(null);
+  const innerRef = useRef<HTMLDivElement>(null);
   const iconInfo = DEVICON_MAP[tech];
   const accentColor = CATEGORY_COLORS[category] ?? "#00E5A8";
   const [imgError, setImgError] = useState(false);
 
-  // Individual float animation
+  // Reset error state if the icon URL changes (fixes hot reload issues)
   useEffect(() => {
-    if (!cardRef.current) return;
+    setImgError(false);
+  }, [iconInfo]);
+
+  // Individual float animation - target the inner div so it doesn't conflict with framer-motion
+  useEffect(() => {
+    if (!innerRef.current) return;
     const delay = (index % 7) * 0.4;
     const duration = 2.6 + (index % 5) * 0.35;
-    const tween = gsap.to(cardRef.current, {
+    const tween = gsap.to(innerRef.current, {
       y: index % 2 === 0 ? -6 : 6,
       duration,
       delay,
@@ -107,64 +128,88 @@ function TechCard({
   }, [index]);
 
   return (
-    <div
-      ref={cardRef}
-      className="tech-card group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl p-4 transition-transform duration-300 hover:scale-110"
-      style={{
-        width: "118px",
-        height: "118px",
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.07)",
-        flexShrink: 0,
-      }}
+    <motion.div
+      ref={setRef}
+      drag
+      dragConstraints={dragConstraints}
+      dragMomentum={false}
+      dragElastic={0}
+      onDragEnd={(e, info) => onDragEnd(tech, info)}
+      animate={{ x: position?.x || 0, y: position?.y || 0 }}
+      whileDrag={{ scale: 1.1, zIndex: 50 }}
+      className="tech-card touch-none"
+      style={{ zIndex: 10, position: "relative" }}
     >
-      {/* Hover glow */}
       <div
-        className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-400 group-hover:opacity-100"
+        ref={innerRef}
+        className="group relative flex flex-col items-center justify-between overflow-hidden rounded-2xl p-4 transition-transform duration-300 hover:scale-110"
         style={{
-          background: `radial-gradient(ellipse 80% 80% at 50% 50%, ${accentColor}18 0%, transparent 70%)`,
-          boxShadow: `0 0 0 1px ${accentColor}25`,
+          width: "100px",
+          height: "100px",
+          background: "rgba(255,255,255,0.03)",
+          border: "1px solid rgba(255,255,255,0.07)",
+          flexShrink: 0,
         }}
-      />
-
-      {/* Icon */}
-      <div className="relative flex h-12 w-12 items-center justify-center">
-        {iconInfo && !imgError ? (
-          <img
-            src={`${DEVICON_BASE}/${iconInfo.slug}/${iconInfo.slug}-${iconInfo.variant}.svg`}
-            alt={tech}
-            width={48}
-            height={48}
-            className="h-12 w-12 object-contain transition-all duration-300 group-hover:drop-shadow-[0_0_10px_var(--glow)]"
-            style={{ "--glow": accentColor } as React.CSSProperties}
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <LetterAvatar name={tech} color={accentColor} />
-        )}
-      </div>
-
-      {/* Name */}
-      <div
-        className="w-full text-center text-[10px] font-semibold uppercase leading-tight tracking-[0.1em] transition-colors duration-300 group-hover:text-white"
-        style={{ color: "rgba(143,143,143,0.7)" }}
       >
-        {tech}
-      </div>
+        {/* Hover glow */}
+        <div
+          className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition-opacity duration-400 group-hover:opacity-100"
+          style={{
+            background: `radial-gradient(ellipse 80% 80% at 50% 50%, ${accentColor}18 0%, transparent 70%)`,
+            boxShadow: `0 0 0 1px ${accentColor}25`,
+          }}
+        />
 
-      {/* Category dot */}
-      <div
-        className="h-1 w-1 rounded-full"
-        style={{ background: accentColor, opacity: 0.5 }}
-      />
-    </div>
+        {/* Icon */}
+        <div className="relative flex h-12 w-12 items-center justify-center pointer-events-none">
+          {iconInfo && !imgError ? (
+            <img
+              src={
+                "url" in iconInfo
+                  ? iconInfo.url
+                  : `${DEVICON_BASE}/${iconInfo.slug}/${iconInfo.slug}-${iconInfo.variant}.svg`
+              }
+              alt={tech}
+              width={48}
+              height={48}
+              className="h-12 w-12 object-contain transition-all duration-300 group-hover:drop-shadow-[0_0_10px_var(--glow)]"
+              style={{ "--glow": accentColor } as React.CSSProperties}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <LetterAvatar name={tech} color={accentColor} />
+          )}
+        </div>
+
+        {/* Name */}
+        <div
+          className="w-full text-center text-[10px] font-semibold uppercase leading-tight tracking-[0.1em] transition-colors duration-300 group-hover:text-white pointer-events-none"
+          style={{ color: "rgba(143,143,143,0.7)" }}
+        >
+          {tech}
+        </div>
+
+        {/* Category dot */}
+        <div
+          className="h-1 w-1 rounded-full pointer-events-none"
+          style={{ background: accentColor, opacity: 0.5 }}
+        />
+      </div>
+    </motion.div>
   );
 }
 
 // ── Main TechStack panel ──────────────────────────────────────────────────────
 export default function TechStack() {
   const panelRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  
   const [activeCategory, setActiveCategory] = useState("All");
+  const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
+  
+  const { currentPanel } = usePanels();
+  const animated = useRef(false);
 
   const techs =
     activeCategory === "All"
@@ -175,16 +220,62 @@ export default function TechStack() {
           (tech) => ({ tech, category: activeCategory })
         );
 
+  const handleDragEnd = (tech: string, info: any) => {
+    const card = cardRefs.current[tech];
+    if (!card) return;
+    const cardRect = card.getBoundingClientRect();
+
+    let swappedWith: string | null = null;
+    
+    // Check for collisions with other cards
+    for (const [otherTech, otherCard] of Object.entries(cardRefs.current)) {
+      if (tech === otherTech || !otherCard) continue;
+      
+      // Ensure the other tech is currently visible
+      if (!techs.some(t => t.tech === otherTech)) continue;
+
+      const otherRect = otherCard.getBoundingClientRect();
+
+      // Calculate intersection area
+      const overlapX = Math.max(0, Math.min(cardRect.right, otherRect.right) - Math.max(cardRect.left, otherRect.left));
+      const overlapY = Math.max(0, Math.min(cardRect.bottom, otherRect.bottom) - Math.max(cardRect.top, otherRect.top));
+      const overlapArea = overlapX * overlapY;
+      const cardArea = cardRect.width * cardRect.height;
+
+      // If overlapping more than 40%
+      if (overlapArea > cardArea * 0.4) {
+        swappedWith = otherTech;
+        break;
+      }
+    }
+
+    setPositions((prev) => {
+      const newPos = { ...prev };
+      const currentPos = prev[tech] || { x: 0, y: 0 };
+
+      if (swappedWith) {
+        // Swap positions
+        const targetPos = prev[swappedWith] || { x: 0, y: 0 };
+        newPos[tech] = { ...targetPos };
+        newPos[swappedWith] = { ...currentPos };
+      } else {
+        // Keep exactly where dropped relative to original pos
+        newPos[tech] = {
+          x: currentPos.x + info.offset.x,
+          y: currentPos.y + info.offset.y,
+        };
+      }
+      return newPos;
+    });
+  };
+
   // Entrance animation
   useEffect(() => {
+    if (currentPanel !== 4 || animated.current) return;
+    animated.current = true;
+
     const ctx = gsap.context(() => {
       gsap.from(".tech-card", {
-        scrollTrigger: {
-          trigger: panelRef.current,
-          scroller: document.body,
-          horizontal: true,
-          start: "left 80%",
-        },
         y: 50,
         opacity: 0,
         duration: 0.7,
@@ -193,18 +284,30 @@ export default function TechStack() {
       });
     }, panelRef);
     return () => ctx.revert();
-  }, []);
+  }, [currentPanel]);
 
   // Re-animate on category change
+  const isFirstMount = useRef(true);
   useEffect(() => {
-    gsap.from(".tech-card", {
-      y: 20,
-      opacity: 0,
-      duration: 0.4,
-      stagger: { amount: 0.4, from: "center" },
-      ease: "power2.out",
-    });
-  }, [activeCategory]);
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    
+    // Only animate if the panel is actually active, to avoid conflicting with entrance
+    if (currentPanel !== 4) return;
+
+    const ctx = gsap.context(() => {
+      gsap.from(".tech-card", {
+        y: 20,
+        opacity: 0,
+        duration: 0.4,
+        stagger: { amount: 0.4, from: "center" },
+        ease: "power2.out",
+      });
+    }, panelRef);
+    return () => ctx.revert();
+  }, [activeCategory, currentPanel]);
 
   return (
     <div
@@ -274,8 +377,12 @@ export default function TechStack() {
         />
       </div>
 
-      {/* Tech grid */}
-      <div className="relative z-10 flex-1 overflow-y-auto px-12 pb-8 md:px-20 lg:px-28" style={{ scrollbarWidth: "none" }}>
+      {/* Tech grid (Canvas Area) */}
+      <div 
+        ref={canvasRef}
+        className="relative z-10 flex-1 overflow-y-auto px-12 pb-8 md:px-20 lg:px-28" 
+        style={{ scrollbarWidth: "none" }}
+      >
         <div className="flex flex-wrap gap-4 py-4">
           {techs.map(({ tech, category }, i) => (
             <TechCard
@@ -283,6 +390,12 @@ export default function TechStack() {
               tech={tech}
               category={category}
               index={i}
+              dragConstraints={canvasRef}
+              onDragEnd={handleDragEnd}
+              position={positions[tech]}
+              setRef={(el) => {
+                cardRefs.current[tech] = el;
+              }}
             />
           ))}
         </div>
@@ -290,3 +403,4 @@ export default function TechStack() {
     </div>
   );
 }
+

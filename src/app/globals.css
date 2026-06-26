@@ -2,7 +2,7 @@
 
 @theme inline {
   --color-background: #050505;
-  --color-background-secondary: #0D0D0D;
+  --color-background-secondary: #0A0A0A;
   --color-card: #111111;
   --color-border: #1D1D1D;
   --color-accent: #00E5A8;
@@ -11,11 +11,14 @@
   --color-muted: #8F8F8F;
   --color-primary: #FFFFFF;
   --color-glow: rgba(0, 229, 168, 0.3);
+  --color-copper: #C86414;
+  --color-copper-light: #E8963C;
+  --color-glow-copper: rgba(200, 100, 20, 0.3);
   --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
   --font-body: var(--font-geist), "Geist", sans-serif;
 }
 
-* {
+html.custom-cursor-enabled * {
   cursor: none !important;
 }
 
@@ -26,30 +29,24 @@
 
 html {
   background: var(--color-background);
-  scroll-behavior: auto;
+}
+
+html,
+body {
+  overflow: hidden;          /* No browser scroll — panels use GSAP translateX */
+  height: 100%;
+  width: 100%;
 }
 
 body {
   background: var(--color-background);
   color: var(--color-primary);
   font-family: var(--font-body);
-  overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-html.lenis,
-html.lenis body {
-  height: auto;
-}
 
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-
-.lenis.lenis-smooth [data-lenis-prevent] {
-  overscroll-behavior: contain;
-}
 
 .mask-reveal {
   overflow: hidden;

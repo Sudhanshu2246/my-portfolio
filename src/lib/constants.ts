@@ -6,10 +6,10 @@ export const SITE_CONFIG = {
     "Senior Full Stack Engineer specializing in MERN stack, scalable backend systems, modern frontend architecture, and production deployments.",
   url: "https://sudhanshu.dev",
   ogImage: "/og.png",
-  github: "https://github.com/sudhanshu",
-  linkedin: "https://linkedin.com/in/sudhanshu",
-  twitter: "https://twitter.com/sudhanshu",
-  email: "hello@sudhanshu.dev",
+  github: "https://github.com/Sudhanshu2246",
+  linkedin: "https://www.linkedin.com/in/sudhanshu-gaur-233726228/",
+  twitter: "https://x.com/SudhanshuIm",
+  email: "sudhanshu2246@gmail.com",
 };
 
 export const NAV_LINKS = [
@@ -24,23 +24,28 @@ export const TECH_STACK = {
   Frontend: [
     "React",
     "Next.js",
-    "TypeScript",
+    "JavaScript",
+    "HTML5",
+    "CSS3",
     "Tailwind CSS",
     "GSAP",
-    "Three.js",
     "Framer Motion",
-    "Redux",
+    "React Query",
+    "Redux-Toolkit",
+    "Context API",
+    "React Hook Form",
+    "Bootstrap",
   ],
   Backend: [
     "Node.js",
     "Express.js",
-    "NestJS",
-    "GraphQL",
+    "Socket.io",
     "REST APIs",
     "WebSockets",
   ],
   Database: ["MongoDB", "PostgreSQL", "Redis", "Elasticsearch", "Prisma"],
-  DevOps: ["AWS", "Docker", "Kubernetes", "CI/CD", "Vercel", "Nginx"],
+  DevOps: ["AWS", "Docker", "CI/CD", "Nginx"],
+  Tools: ["Postman", "Mongo DB Compass", "VS Code", "GitHub"],
 };
 
 export interface Project {
@@ -117,7 +122,7 @@ export const PROJECTS: Project[] = [
       "Optimizing full-text search across thousands of resumes while maintaining real-time collaboration between distributed recruiter teams and processing bulk Excel imports without timeout.",
     results:
       "Search latency reduced by 60%. System handles 10K+ candidate records efficiently. Real-time notifications cut recruiter response time significantly.",
-    image: "/heroSectionImg/project-1.png",
+    image: "/heroSectionImg/project-15.png",
     color: "#00E5A8",
     links: {},
   },
@@ -170,7 +175,7 @@ export const PROJECTS: Project[] = [
       "Integrating with third-party TBO APIs while maintaining low latency, handling concurrent booking requests, and ensuring data consistency across the booking pipeline.",
     results:
       "Hotel search latency reduced by 60%. Live search results streamed in real time. Enterprise booking workflow fully optimized for scale.",
-    image: "/heroSectionImg/project-2.png",
+    image: "/heroSectionImg/project-1.png",
     color: "#64FFDA",
     links: {},
   },
@@ -219,7 +224,7 @@ export const PROJECTS: Project[] = [
       "Integrating multiple third-party APIs for flight and hotel data, implementing translation across five languages without performance degradation, and managing role-based access across three distinct dashboards.",
     results:
       "Scalable multilingual booking experience supporting five languages. Secure RBAC across admin, SEO, and user dashboards. Real-time inventory via TripJack integration.",
-    image: "/heroSectionImg/project-3.png",
+    image: "/heroSectionImg/project-6.png",
     color: "#7DF9FF",
     links: {},
   },
@@ -266,7 +271,7 @@ export const PROJECTS: Project[] = [
       "Handling real-time GPS location updates from multiple drivers simultaneously, managing document verification workflows, and building three distinct dashboard experiences from a single backend.",
     results:
       "Centralized fleet visibility for organizations. Improved driver management and trip monitoring. Real-time operational insights across super admin, company, and driver dashboards.",
-    image: "/heroSectionImg/project-4.png",
+    image: "/heroSectionImg/project-12.png",
     color: "#00E5A8",
     links: {},
   },
