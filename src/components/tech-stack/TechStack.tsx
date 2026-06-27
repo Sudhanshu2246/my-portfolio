@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
-import { motion } from "framer-motion";
+import { motion, PanInfo } from "framer-motion";
 import { TECH_STACK } from "@/lib/constants";
 import { usePanels } from "@/lib/panelContext";
 
@@ -96,8 +96,8 @@ function TechCard({
   tech: string;
   category: string;
   index: number;
-  dragConstraints: React.RefObject<HTMLDivElement>;
-  onDragEnd: (tech: string, info: any) => void;
+  dragConstraints: React.RefObject<HTMLDivElement | null>;
+  onDragEnd: (tech: string, info: PanInfo) => void;
   position: { x: number; y: number } | undefined;
   setRef: (el: HTMLDivElement | null) => void;
 }) {
@@ -106,10 +106,12 @@ function TechCard({
   const accentColor = CATEGORY_COLORS[category] ?? "#00E5A8";
   const [imgError, setImgError] = useState(false);
 
-  // Reset error state if the icon URL changes (fixes hot reload issues)
-  useEffect(() => {
+  // Reset error state if the icon URL changes
+  const prevIconInfo = useRef(iconInfo);
+  if (prevIconInfo.current !== iconInfo) {
     setImgError(false);
-  }, [iconInfo]);
+    prevIconInfo.current = iconInfo;
+  }
 
   // Individual float animation - target the inner div so it doesn't conflict with framer-motion
   useEffect(() => {
@@ -220,7 +222,7 @@ export default function TechStack() {
           (tech) => ({ tech, category: activeCategory })
         );
 
-  const handleDragEnd = (tech: string, info: any) => {
+  const handleDragEnd = (tech: string, info: PanInfo) => {
     const card = cardRefs.current[tech];
     if (!card) return;
     const cardRect = card.getBoundingClientRect();
@@ -386,7 +388,7 @@ export default function TechStack() {
         <div className="flex flex-wrap gap-4 py-4">
           {techs.map(({ tech, category }, i) => (
             <TechCard
-              key={`${activeCategory}-${tech}`}
+              key={tech}
               tech={tech}
               category={category}
               index={i}
@@ -394,7 +396,11 @@ export default function TechStack() {
               onDragEnd={handleDragEnd}
               position={positions[tech]}
               setRef={(el) => {
-                cardRefs.current[tech] = el;
+                if (el) {
+                  cardRefs.current[tech] = el;
+                } else {
+                  delete cardRefs.current[tech];
+                }
               }}
             />
           ))}
